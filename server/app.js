@@ -15,19 +15,26 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
+//app.use(Auth.createSession);
+app.use(require('./middleware/cookieParser'));
 
+app.get('/cookies',
+(req, res, next) => {
 
-app.get('/', 
+});
+
+app.get('/',
+(req, res) => {
+
+  res.render('index');
+});
+
+app.get('/create',
 (req, res) => {
   res.render('index');
 });
 
-app.get('/create', 
-(req, res) => {
-  res.render('index');
-});
-
-app.get('/links', 
+app.get('/links',
 (req, res, next) => {
   models.Links.getAll()
     .then(links => {
@@ -38,7 +45,10 @@ app.get('/links',
     });
 });
 
-app.post('/links', 
+
+
+
+app.post('/links',
 (req, res, next) => {
   var url = req.body.url;
   if (!models.Links.isValidUrl(url)) {
@@ -77,7 +87,51 @@ app.post('/links',
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/login',
+(req,res) => {
+  res.render('login');
+});
 
+app.post('/login',
+(req, res, next) => {
+
+  var user = models.Users.get({username: req.body.username});
+  user.then((data) => {
+    //console.log(req.body.password);
+
+
+    if(data && models.Users.compare(req.body.password, data.password, data.salt)){
+      res.redirect('/');
+    } else {
+      res.redirect('/login');
+    }
+  });
+
+
+
+});
+
+app.get('/signup',
+(req,res) => {
+  res.render('signup');
+});
+
+app.post('/signup',
+(req, res, next) => {
+  var user = models.Users.get({username: req.body.username});
+
+  user.then(data => {
+    if(!data) {
+      models.Users.create({username: req.body.username, password: req.body.password});
+      res.redirect('/');
+    } else {
+      res.redirect('/signup');
+    }
+  });
+
+
+
+});
 
 
 /************************************************************/
